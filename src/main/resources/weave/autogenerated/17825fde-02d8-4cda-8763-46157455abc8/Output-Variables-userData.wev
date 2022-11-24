@@ -1,0 +1,22 @@
+%dw 2.0
+
+type auto_17825fde_02d8_4cda_8763_46157455abc8_Output_Variables_userData = {|
+  user_id: Number, 
+  first_name: String, 
+  last_name: String, 
+  email: String, 
+  phone?: Number, 
+  date_of_birth: String, 
+  gender?: String, 
+  blood_group?: String, 
+  identity_card?: String, 
+  user_type?: String, 
+  identity_number: String, 
+  landmark?: String, 
+  address_line_1: String, 
+  district?: String, 
+  place: String, 
+  state: String, 
+  pincode: Number
+|}
+

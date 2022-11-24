@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_2d7e883c_89f3_48a1_bdf3_d4054274613b_Output_Variables_address_data = Array<{|  address_id: Number,   landmark?: String,   address_line_1: String,   address_line_2?: String,   place: String,   district?: String,   state: String,   created_at?: Date,   updated_at?: Date,   pincode: Number|}>
+

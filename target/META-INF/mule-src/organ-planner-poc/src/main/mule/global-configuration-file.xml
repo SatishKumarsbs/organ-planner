@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:jira="http://www.mulesoft.org/schema/mule/jira"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/jira http://www.mulesoft.org/schema/mule/jira/current/mule-jira.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:listener-config name="organ-planner-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${http.port}" />
+    </http:listener-config>
+    <apikit:config name="organ-planner-api-config" api="organ-planner-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="dc53ca98-9d0a-454c-b685-4e47c876a2ea" >
+		<db:generic-connection url="${db.host}" user="${db.user}" password="${db.pass}" driverClassName="${db.driverClass}"/>
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="be7d0f3d-99ba-4d73-a5c7-6e5cb3c85777" file="${env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="274ad469-0f41-4168-929c-bdfca215de70" name="env" value="local" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="5aa5b086-5d5a-422a-bd63-61961b92b99e" file="${env}.yaml" key="organPlanner@123" />
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="8966a6e6-16c0-4b25-b4b1-69bf6f16a4e9" >
+		<http:request-connection host="${http.host}" port="${http.port}" />
+	</http:request-config>
+	<configuration doc:name="Configuration" doc:id="f81622c8-5dda-4c79-b965-dcc22a6e082b" defaultErrorHandler-ref="global-error-handlingError_Handler" />
+	<jira:config name="Jira_Connector_Config" doc:name="Jira Connector Config" doc:id="16f802f6-7a31-4fb7-8dfc-b568d21b4eb1" >
+		<jira:basic-auth-connection username="${jira.userName}" password="${jira.apiToken}" baseUri="${jira.baseUri}"/>
+	</jira:config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="6021dc5b-eac0-460e-a0fe-964832d246e6" sendCorrelationId="ALWAYS" >
+		<vm:connection >
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</vm:connection>
+		<vm:queues >
+			<vm:queue queueName="donate-request-queue" maxOutstandingMessages="1000" queueType="PERSISTENT"/>
+			<vm:queue queueName="receive-request-queue" maxOutstandingMessages="1000" queueType="PERSISTENT"/>
+		</vm:queues>
+	</vm:config>
+</mule>

@@ -1,0 +1,57 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  hospital_name:
+    type: string
+    required: false
+    minLength: 3
+    maxLength: 25
+  email: 
+    type: string
+    required: false
+    pattern: ^.+@.+\..+$
+    minLength: 3
+    maxLength: 50
+  phone:
+    type: number
+    required: false
+  landmark:
+    type: string
+    minLength: 5
+    maxLength: 25
+    required: false
+  address_line_1:
+    type: string
+    minLength: 5
+    maxLength: 30
+    required: false
+  address_line_2:
+    type: string
+    minLength: 5
+    maxLength: 30
+    required: false
+  district:
+    type: string
+    minLength: 3
+    maxLength: 30
+    required: false
+  place:
+    type: string
+    minLength: 3
+    maxLength: 30
+    required: false
+  state:
+    type: string
+    minLength: 3
+    maxLength: 30
+    required: false
+  pincode:
+    type: number
+    required: false
+  hospital_registration_number:
+    type: string
+    minLength: 3
+    maxLength: 25
+    required: false
+    

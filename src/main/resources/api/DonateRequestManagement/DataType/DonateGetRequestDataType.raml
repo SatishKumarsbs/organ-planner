@@ -1,0 +1,38 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  request_id?: integer
+  first_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  last_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  email: 
+    type: string
+    pattern: ^.+@.+\..+$
+    minLength: 3
+    maxLength: 50
+  phone: number
+  blood_group: string
+  address_line_1: string
+  address_line_2?: string
+  place: string
+  state: string
+  identity_card: string
+  identity_card_number: string
+  current_landmark: string
+  current_address_line_1: string
+  current_address_line_2?: string
+  current_district?: string
+  current_city: string
+  current_state: string
+  current_postal_code: number
+  alternate_contact_number: number
+  organ_name: string
+  status: 
+    enum: ["open", "close","archieve"]
+    

@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="organ-planner-api-main">
+        <http:listener config-ref="organ-planner-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="organ-planner-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="organ-planner-api-console">
+        <http:listener config-ref="organ-planner-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="organ-planner-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="patch:\address\(addressID):application\json:organ-planner-api-config">
+        <logger level="INFO" doc:name="Before Updating Address" doc:id="6e2bea98-9ad4-4557-9efa-2b17a7bea0a5" message="Before Updating Address #[payload]" />
+        <flow-ref doc:name="updateAddress" doc:id="7e929b01-2039-4b8c-a782-d7304fa61e5f" name="updateAddress" />
+        <logger level="INFO" doc:name="After Updating Address" doc:id="03633b34-3ed9-4cba-8da4-b6374371f1e1" message="After Updating Address #[payload]" />
+    </flow>
+    <flow name="patch:\hospital\(hospitalID):application\json:organ-planner-api-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="hospitalID">attributes.uriParams.'hospitalID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"Hospital has been updated successfully"]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="patch:\donate-request\(requestID):application\json:organ-planner-api-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="requestID">attributes.uriParams.'requestID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"Receiver Request has been updated successfully"]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="patch:\user\(userID):application\json:organ-planner-api-config">
+        <logger level="INFO" doc:name="Before Updating User" doc:id="865605ed-0844-4f23-9de4-af6da12572b3" message="Before Updating User #[payload]" />
+        <flow-ref doc:name="updateUser" doc:id="38aed3f7-092b-480a-8395-8d78c42a83a7" name="updateUser" />
+        <logger level="INFO" doc:name="After Updating User" doc:id="02f4571f-8886-46d7-ad0e-1099815ef68e" message="After Updating User #[payload]" />
+    </flow>
+    <flow name="get:\hospital\all:organ-planner-api-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    hosptial_id: 1,
+    hospital_name: "Fortis Hospital",
+    email: "fortis123@gmail.com",
+    primary_phone: 9547863012,
+    landmark: "Opposite Park",
+    address_line_1: "123 Street Sector 62",
+    district: "SAS Nagar",
+    place: "Mohali",
+    state: "Punjab",
+    pincode: 16055,
+    hospital_registration_number: "fortis4659"
+  }, 
+  {
+    hosptial_id: 2,
+    hospital_name: "Ivy Hospital",
+    email: "ivy.hospital@gmail.com",
+    primary_phone: 8874563219,
+    landmark: "Near PCL Chownk",
+    address_line_1: "123 Street Sector 71",
+    district: "SAS Nagar",
+    place: "Mohali",
+    state: "Punjab",
+    pincode: 16055,
+    hospital_registration_number: "ivy8895"
+  }
+]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\user\all:organ-planner-api-config">
+        <logger level="INFO" doc:name="Before Getting All Users" doc:id="8c765bcc-1eec-499b-8b00-f7cf95759a93" message="Before Getting All Users #[payload]" />
+        <flow-ref doc:name="getAllUsers" doc:id="0edf6db9-711f-4958-9983-fae867e6ec9e" name="getAllUsers" />
+        <logger level="INFO" doc:name="After Getting All Users" doc:id="6a3b7d0e-f6e6-4ee0-b1bf-5b58f30d5e65" message="After Getting All Users #[payload]" />
+    </flow>
+    <flow name="get:\donate-request\all:organ-planner-api-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    request_id: 1,
+    first_name: "Yashpal",
+    last_name: "Yadav",
+    email: "yashpal.yadav@gmail.com",
+    phone: 8793012456,
+    blood_group: "A+",
+    address_line_1: "123 Street Sector 50",
+    place: "Chandigarh",
+    state: "Punjab",
+    identity_card: "pan_card",
+    identity_card_number: "JTYP7890",
+    current_landmark: "Opposite Park",
+    current_address_line_1: "71 Street, Sector 70",
+    current_district: "SAS Nagar",
+    current_city: "Mohali",
+    current_state: "Punjab",
+    current_postal_code: 140407,
+    alternate_contact_number: 9745632018,
+    organ_name: "Liver",
+    status: "open"
+  }, 
+  {
+    request_id: 2,
+    first_name: "Yashpal",
+    last_name: "Yadav",
+    email: "yashpal.yadav@gmail.com",
+    phone: 8793012456,
+    blood_group: "A+",
+    address_line_1: "123 Street Sector 50",
+    place: "Chandigarh",
+    state: "Punjab",
+    identity_card: "pan_card",
+    identity_card_number: "JTYP7890",
+    current_landmark: "Opposite Park",
+    current_address_line_1: "71 Street, Sector 70",
+    current_district: "SAS Nagar",
+    current_city: "Mohali",
+    current_state: "Punjab",
+    current_postal_code: 140407,
+    alternate_contact_number: 9745632018,
+    organ_name: "kidney",
+    status: "open"
+  }
+]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\hospital\(hospitalID):organ-planner-api-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="hospitalID">attributes.uriParams.'hospitalID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  hosptial_id: 1,
+  hospital_name: "Fortis Hospital",
+  email: "fortis123@gmail.com",
+  primary_phone: 9547863012,
+  landmark: "Opposite Park",
+  address_line_1: "123 Street Sector 62",
+  district: "SAS Nagar",
+  place: "Mohali",
+  state: "Punjab",
+  pincode: 16055,
+  hospital_registration_number: "fortis4659"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\donate-request\(requestID):organ-planner-api-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="requestID">attributes.uriParams.'requestID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  request_id: 1,
+  first_name: "Yashpal",
+  last_name: "Yadav",
+  email: "jasdev.sharma@bitsinglass.com",
+  phone: 8793012456,
+  blood_group: "A+",
+  address_line_1: "123 Street Sector 50",
+  place: "Chandigarh",
+  state: "Punjab",
+  identity_card: "pan_card",
+  identity_card_number: "JTYP7890",
+  current_landmark: "Opposite Park",
+  current_address_line_1: "71 Street, Sector 70",
+  current_district: "SAS Nagar",
+  current_city: "Mohali",
+  current_state: "Punjab",
+  current_postal_code: 140407,
+  alternate_contact_number: 9745632018,
+  organ_name: "Kidney",
+  status: "open"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\user\(userID):organ-planner-api-config">
+        <logger level="INFO" doc:name="Before Getting User By ID" doc:id="f8552b54-31fb-4327-86eb-763c255a01d0" message="Before Getting User By ID #[payload]" />
+        <flow-ref doc:name="getUserByID" doc:id="ff580b63-5718-42bd-bc4e-108d62a0135d" name="getUserByID" />
+        <logger level="INFO" doc:name="After Getting User By ID" doc:id="50dee092-0f1b-4905-86f1-84001989d354" message="After Getting User By ID #[payload]" />
+    </flow>
+    <flow name="post:\address:application\json:organ-planner-api-config">
+        <logger level="INFO" doc:name="Before Inserting Address" doc:id="ad5719cb-4ff1-472b-b414-87fb22285208" message="Before Inserting Address #[payload]" />
+        <flow-ref doc:name="insertAddress" doc:id="89f6b9a0-ad51-4eef-89e5-4d0916e753eb" name="insertAddress" />
+        <logger level="INFO" doc:name="After Inserting Address" doc:id="a40c5520-f83a-4149-a486-96668afded0b" message="After Inserting Address #[payload]" />
+    </flow>
+    <flow name="post:\donate-request:application\json:organ-planner-api-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"The Organ Donate Request ID 1 has been successfully created"]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\hospital:application\json:organ-planner-api-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"The Hospital ID 1 has been successfully created"]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\user:application\json:organ-planner-api-config">
+        <logger level="INFO" doc:name="Before Inserting User" doc:id="b1fca5b8-896d-4a83-8470-a16804ce5d69" message="Before Inserting User #[payload]" />
+        <flow-ref doc:name="insertUser" doc:id="c2fa17d8-5c4d-4ce3-b6f9-695badf8869d" name="insertUser" />
+        <logger level="INFO" doc:name="After Inserting User" doc:id="a49abb8e-e9c9-4ddc-b881-37a1c31c48c6" message="After Inserting User #[payload]" />
+    </flow>
+	<flow name="patch:\organ-request\(requestID):application\json:organ-planner-api-config">
+		<logger level="INFO" doc:name="Logger" doc:id="de152dd1-eb6c-427a-925f-1cb80520011b" message="Before Update Organ Request  #[payload]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="5b1c0fa8-b799-4c04-9243-eb40fa753a9d" name="patch-organ-request-subflow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="787c482c-2942-4f72-8657-c3364ac5954f" message="After Update Organ Request  #[payload]"/>
+    </flow>
+    <flow name="get:\organ-request\all:organ-planner-api-config">
+		<logger level="INFO" doc:name="Logger" doc:id="360a19bc-d611-4f31-84c6-6706974e1898" message="Before get all organ request  #[payload]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="41b78eb3-558d-46e0-b9ee-0bd505476966" name="getAllOrganRequest"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e7dcddcd-3fe1-4f8e-8742-e70f31ee8829" />
+    </flow>
+    <flow name="get:\organ-request\(requestID):organ-planner-api-config" doc:id="e4fe3a19-0602-47b2-9508-1d9aee12882e">
+        <logger level="INFO" doc:name="Logger" doc:id="3d2b5479-14e3-4725-b453-0a2068463544" message="Before get organ request by id  #[payload]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="08304679-151f-4e58-bb53-26e6c548846f" name="get-request-organ-by-id"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7ac2463a-9148-4c5e-9f22-5104e886a5d0" message="After get all organ request #[payload]"/>
+    </flow>
+    <flow name="post:\organ-request:application\json:organ-planner-api-config" doc:id="4ad65d17-7ecd-4af7-b1c4-1f9743922075">
+		<logger level="INFO" doc:name="Logger" doc:id="4bc04c2d-5ad3-43f1-ab05-f5864468b211" message="Before Inserting Organ Request  #[payload]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="c9d6c2bf-1cac-4e4c-9502-bf8d2f5742df" name="request_organ_implementationSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="89331786-1b6e-452b-b939-05ca8f4f7d37" message="After get organ request by id  #[payload]"/>
+    </flow>
+</mule>

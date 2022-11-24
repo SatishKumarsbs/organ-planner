@@ -1,0 +1,24 @@
+%dw 2.0
+
+type auto_d9cc1982_6c06_4265_a05d_a1fa2e5651f6_Input_Payload = {
+  pincode?: Number, 
+  gender?: "female" | "male", 
+  last_name?: String, 
+  identity_card?: "voter_card" | "aadhar_card" | "pan_card", 
+  user_type?: "donor" | "receiver", 
+  phone?: Number, 
+  dob?: String, 
+  district?: String, 
+  address_line_1?: String, 
+  blood_group?: String, 
+  address_line_2?: String, 
+  place?: String, 
+  state?: String, 
+  landmark?: String, 
+  first_name?: String, 
+  email?: String, 
+  age?: Number, 
+  identity_card_number?: String, 
+  _?: Any
+}
+

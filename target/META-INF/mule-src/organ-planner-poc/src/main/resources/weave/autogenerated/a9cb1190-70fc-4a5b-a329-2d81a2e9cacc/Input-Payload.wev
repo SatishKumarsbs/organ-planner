@@ -1,0 +1,25 @@
+%dw 2.0
+
+type auto_a9cb1190_70fc_4a5b_a329_2d81a2e9cacc_Input_Payload = {
+  pincode: Number, 
+  gender: "other" | "female" | "male", 
+  date_of_birth: String, 
+  last_name: String, 
+  identity_card: "voter_card" | "aadhar_card" | "pan_card", 
+  user_type: "donor" | "receiver", 
+  user_id?: Number, 
+  phone: Number, 
+  district?: String, 
+  address_line_1: String, 
+  blood_group: "B+" | "A+" | "AB+" | "B-" | "O+" | "AB-" | "A-" | "O-", 
+  address_line_2?: String, 
+  place: String, 
+  state: String, 
+  landmark?: String, 
+  first_name: String, 
+  email: String, 
+  age: Number, 
+  identity_card_number: String, 
+  _?: Any
+}
+

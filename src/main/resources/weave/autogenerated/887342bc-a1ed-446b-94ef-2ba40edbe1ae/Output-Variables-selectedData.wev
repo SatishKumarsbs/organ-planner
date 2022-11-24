@@ -1,0 +1,18 @@
+%dw 2.0
+
+type auto_887342bc_a1ed_446b_94ef_2ba40edbe1ae_Output_Variables_selectedData = {|
+  request_id: Number, 
+  user_id: Number, 
+  hospital_id: Number, 
+  organ_name: String, 
+  transplant_priority?: String, 
+  survival_time: String, 
+  medical_report?: String, 
+  transformation_required?: Boolean, 
+  emergency_contact_address?: String, 
+  created_at?: Date, 
+  updated_at?: Date, 
+  emergency_contact_number?: Number, 
+  status?: String
+|}
+

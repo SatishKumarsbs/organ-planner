@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_e367dcca_30f8_4e0b_a1ae_1f5a2cd07086_Input_Payload = {
+  pincode: Number, 
+  district?: String, 
+  address_id?: Number, 
+  address_line_1: String, 
+  address_line_2?: String, 
+  place: String, 
+  state: String, 
+  landmark?: String, 
+  _?: Any
+}
+

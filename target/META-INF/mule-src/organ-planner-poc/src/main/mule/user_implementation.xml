@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<sub-flow name="insertUser" doc:id="a9cb1190-70fc-4a5b-a329-2d81a2e9cacc" >
+		<set-variable value="#[message.payload]" doc:name="userInputData" doc:id="0f653aa6-70f1-482b-a781-3a3daf7873ce" variableName="userInputData" />
+		<db:select doc:name="Select User Email" doc:id="9712eb87-1532-4074-bced-612b85beb06e" config-ref="Database_Config" target="userEmail" >
+			<db:sql ><![CDATA[SELECT user_id, email FROM users WHERE email = :email]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	email: payload.email
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="011e5800-5a2a-431c-8b27-31b2a0506ecc" >
+			<when expression="#[sizeOf(vars.userEmail)&lt;1]" >
+				<http:request method="POST" doc:name="Call Address SAPI" doc:id="631bc673-d3ab-4fd7-8833-bb3f1eb542f4" config-ref="HTTP_Request_configuration" path="/api/address" outputMimeType="application/json"/>
+				<logger level="INFO" doc:name="Address Response" doc:id="296a9481-8644-4035-a37b-1efa7d404274" message="#[payload]"/>
+				<set-variable value="#[payload.address_id]" doc:name="address_id" doc:id="d23a0bf5-9a89-4404-b373-3ef3dfbcb7c1" variableName="address_id" mimeType="application/json"/>
+				<logger level="INFO" doc:name="UserInputData" doc:id="5c72c69d-f7bb-4fb6-8b2a-f6270d7e45c7" message="#[vars.userInputData]"/>
+				<db:insert doc:name="Insert User" doc:id="350c0337-049e-41bf-9325-fcdcbe413583" config-ref="Database_Config" autoGenerateKeys="true" target="user" >
+					<db:sql ><![CDATA[INSERT INTO users (first_name, last_name, email, phone, date_of_birth, age, gender, blood_group, identity_card, user_type, identity_number, address_id, created_at, updated_at) 
+VALUES (:first_name, :last_name, :email, :phone, :date_of_birth, :age, :gender, :blood_group, :identity_card, :user_type, :identity_number, :address_id, now(), now())]]></db:sql>
+					
+					
+					<db:parameter-types >
+						<db:parameter-type key="gender" type="OTHER" />
+						<db:parameter-type key="blood_group" type="OTHER" />
+						<db:parameter-type key="identity_card" type="OTHER" />
+						<db:parameter-type key="user_type" type="OTHER" />
+					</db:parameter-types>
+					<db:input-parameters ><![CDATA[#[{
+	first_name: vars.userInputData.first_name,
+	last_name: vars.userInputData.last_name,
+	email: vars.userInputData.email,
+	phone: vars.userInputData.phone,
+	date_of_birth: vars.userInputData.date_of_birth,
+	age: vars.userInputData.age,
+	gender: vars.userInputData.gender,
+	blood_group: vars.userInputData.blood_group,
+	identity_card: vars.userInputData.identity_card,
+	user_type: vars.userInputData.user_type,
+	identity_number: vars.userInputData.identity_card_number,
+	address_id: vars.address_id as Number
+}]]]></db:input-parameters>
+				</db:insert>
+				<set-variable value="#[vars.user.generatedKeys.user_id]" doc:name="user_id" doc:id="02b51c31-54fa-4f24-9b94-765d95c3347a" variableName="user_id" />
+				<logger level="INFO" doc:name="user_id" doc:id="b347d37f-34bd-42ea-bd1f-efe746d26212" message="#[vars.user_id]" />
+				<ee:transform doc:name="User Inserted Successfully" doc:id="9f5c9b10-0901-44b4-97fa-01667e713ab0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "The User ID " ++ vars.user_id as String ++ " has been successfully created"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="User Already Existed" doc:id="41d0c9dc-ba53-4440-a89c-61a7b8a45caf" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "User is already existed"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="getAllUsers" doc:id="a797f4fb-5668-4218-8377-4ff1e5c19b32" >
+		<db:select doc:name="Select All Users" doc:id="16d1ab78-95b5-413b-8b93-1c63d5a37ab5" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.date_of_birth, u.gender, u.blood_group, u.identity_card, u.user_type, u.identity_number, ad.landmark, ad.address_line_1, ad.district, ad.place, ad.state, ad.pincode FROM users as u
+join address as ad ON u.address_id = ad.address_id]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Get All Users" doc:id="20d701f9-f5f1-4cf3-b3bd-f029bbbaa8c6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="getUserByID" doc:id="17825fde-02d8-4cda-8763-46157455abc8" >
+		<db:query-single doc:name="Get User By ID" doc:id="a3fff1b6-0d39-47fb-a49b-94cd7bc5d824" config-ref="Database_Config" target="userData" >
+			<db:sql ><![CDATA[SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.date_of_birth, u.gender, u.blood_group, u.identity_card, u.user_type, u.identity_number, ad.landmark, ad.address_line_1, ad.district, ad.place, ad.state, ad.pincode FROM users as u
+join address as ad ON u.address_id = ad.address_id WHERE user_id = :userID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	userID: attributes.uriParams.userID
+}]]]></db:input-parameters>
+		</db:query-single>
+		<choice doc:name="Choice" doc:id="dc672e9d-2b30-4001-b1c8-adce6323deaa" >
+			<when expression="#[!isEmpty(vars.userData)]" >
+				<ee:transform doc:name="User Data" doc:id="057c05a0-1abd-440c-b58b-d861a04d2588" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.userData]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[200]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="User Not Found" doc:id="5323c6f7-981d-48e3-8b9e-3ec162102444" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	
+	message: "User has not been found"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[404]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="updateUser" doc:id="d9cc1982-6c06-4265-a05d-a1fa2e5651f6" >
+		<set-variable value="#[message.payload]" doc:name="userUpdateData" doc:id="534f1eac-5d9a-46af-9a38-bd8a102c82d3" variableName="userUpdateData"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cd9ec0dc-8fbf-41ac-8b6a-934491022171" message="${common.addressKeys}"/>
+		<db:select doc:name="Select User By ID" doc:id="92ed1045-d786-44bc-850c-8d228be2c9f6" config-ref="Database_Config" target="user_data" >
+			<db:sql ><![CDATA[SELECT * FROM users WHERE user_id = :user_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	user_id: attributes.uriParams.userID
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="982a7e5d-e1b3-4048-b16f-b1eed033bbc8" >
+			<when expression="#[!isEmpty(vars.user_data)]" >
+				<set-variable value="#[vars.user_data.address_id reduce $]" doc:name="address_id" doc:id="78a5c7c8-1c86-4645-9180-1d012f8d3022" variableName="address_id"/>
+				<set-variable value="#[vars.user_data.user_id reduce $]" doc:name="userID" doc:id="5240d9c6-8199-4db4-9a33-e76edf4755e7" variableName="userID"/>
+				<ee:transform doc:name="address Payload" doc:id="5f37d09f-a1f2-4f55-9366-282377fd6bb3">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var userKeys = ["first_name", "last_name", "email", "date_of_birth", "gender", "blood_group", "identity_card", "user_type", "identity_card_number", "phone", "age"]
+var addressFields = payload -- userKeys
+---
+addressFields]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<choice doc:name="Choice" doc:id="a5a56e4c-a1c5-43fd-bf21-7afb72ec3d49">
+					<when expression="#[!isEmpty(payload)]">
+						<http:request method="PATCH" doc:name="Call Update Address SAPI" doc:id="8d5ccb5b-6a70-4799-a5bd-decba987e95e" config-ref="HTTP_Request_configuration" path="/api/address/{addressID}">
+					<http:uri-params><![CDATA[#[output application/java
+---
+{
+	addressID : vars.address_id
+}]]]></http:uri-params>
+				</http:request>
+					</when>
+				</choice>
+				<ee:transform doc:name="User Fields" doc:id="5c0d499c-beb2-4630-9fbc-9867fda4e9d1">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="userFields" ><![CDATA[%dw 2.0
+output application/json
+var addressKeys = ["landmark", "address_line_1", "address_line_2", "place", "district", "state", "pincode"]
+var userFields = vars.userUpdateData -- addressKeys
+---
+userFields]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<choice doc:name="Choice" doc:id="0cebef61-1330-40e4-979e-7e0d1832e7d8">
+					<when expression="#[!isEmpty(vars.userFields)]">
+						<ee:transform doc:name="Update Query" doc:id="ec3233c4-3422-49e0-aa3b-1724d6e88d96">
+					<ee:message />
+					<ee:variables>
+						<ee:set-variable variableName="update_query"><![CDATA[%dw 2.0
+output application/json 
+fun renameKey(key: Key) = key match {
+    case "identity_card_number" -> "identity_number"
+    else -> (key)
+}
+fun queryFields(item) = (item mapObject ((value, key, index) -> (renameKey(key)) : if(typeOf(value) == Number) value else "'" ++ value ++ "'" ) pluck ((value, key, index) -> [(key) , value ] joinBy(" = "))) joinBy(", ")
+---
+"UPDATE users SET " ++ queryFields(vars.userFields) ++ " WHERE user_id = " ++ vars.userID]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+						<db:update doc:name="Update User" doc:id="8695fab5-c200-4e75-890f-d02e20cd5a11" config-ref="Database_Config" autoGenerateKeys="true" target="updatedUserData">
+					<db:sql><![CDATA[#[vars.update_query]]]></db:sql>
+				</db:update>
+					</when>
+				</choice>
+				<logger level="INFO" doc:name="Logged Update Query" doc:id="3b88286d-468b-4cce-a9d1-e660edbd5bff" message="#[vars.update_query]" />
+				<ee:transform doc:name="User Updated" doc:id="6f41d3e2-472c-432c-9f66-d82036ee8053" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "The User ID " ++ vars.userID as String ++ " has been updated successfully"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="User Not Found" doc:id="038e17f1-5daf-4a68-83f4-135ff1f883f7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "User has not been found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

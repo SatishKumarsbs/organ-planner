@@ -1,0 +1,31 @@
+%dw 2.0
+
+type auto_e4fe3a19_0602_47b2_9508_1d9aee12882e_Output_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|
+    blood_group?: "B+" | "A+" | "AB+" | "B-" | "O+" | "AB-" | "A-" | "O-", 
+    organ_name?: String, 
+    status?: "archieve" | "close" | "open", 
+    state?: String, 
+    transplant_priority?: "high" | "critical" | "low" | "medium", 
+    survival_time?: String, 
+    transformation_required?: Boolean
+  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {|  |}, 
+  version: String, 
+  localAddress: String
+|}
+

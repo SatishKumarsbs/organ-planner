@@ -1,0 +1,329 @@
+#%RAML 1.0
+title: Organ Planner API
+
+types:
+  userDataType: !include UserManagement/DataType/UserDataType.raml
+  userUpdateDataType: !include UserManagement/DataType/UserUpdateDataType.raml
+  hospitalDataType: !include HospitalManagement/DataType/HospitalDataType.raml
+  hospitalUpdateDataType: !include HospitalManagement/DataType/HospitalUpdateDataType.raml
+  receiverRequestDataType: !include ReceiverRequestManagement/DataType/ReceiverRequestDataType.raml
+  receiverGetRequestDataType: !include ReceiverRequestManagement/DataType/ReceiverGetRequestDataType.raml
+  receiverUpdateRequestDataType: !include ReceiverRequestManagement/DataType/ReceiverUpdateRequestDataType.raml
+  donateRequestDataType: !include DonateRequestManagement/DataType/DonateRequestDataType.raml
+  donateGetRequestDataType: !include DonateRequestManagement/DataType/DonateGetRequestDataType.raml
+  donateUpdateRequestDataType: !include DonateRequestManagement/DataType/DonateUpdateDataType.raml
+  addressDataType: !include AddressManagement/DataType/AddressDataType.raml
+  addressUpdateDataType: !include AddressManagement/DataType/AddressUpdateDataType.raml
+
+traits:
+  errorTraits: !include Traits/errorTraits.raml
+
+/user:
+  post:
+    description: Add new User Details
+    is: errorTraits
+    body:
+      application/json:
+        type: userDataType
+        example: !include UserManagement/Examples/UserExampleData.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples:
+              message: The User ID 1 has been successfully created
+
+  /all:
+    get:
+      description: Retrieve all of the user details
+      is: errorTraits
+      responses:
+        200:
+          body:
+            application/json:
+              type: userDataType[]
+              examples: !include UserManagement/Examples/AllUsersExampleData.raml
+
+  /{userID}:
+    uriParameters:
+      userID:
+        type: integer
+    get:
+      description: Retrieve the User By given ID
+      is: errorTraits
+      responses:
+        200:
+          body:
+            application/json:
+              type: userDataType
+              examples: !include UserManagement/Examples/SingleUserExampleData.raml
+        404:
+          body:
+            application/json:
+              examples: {message: "User Not Found"}
+
+    patch:
+      description: Update the User details for the particular user
+      is: errorTraits
+      body:
+        application/json:
+          type: userUpdateDataType
+          example: !include UserManagement/Examples/UserUpdateExampleData.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: User has been updated successfully
+
+/hospital:
+  post:
+    description: Add new Hospital
+    is: errorTraits
+    body:
+      application/json:
+        type: hospitalDataType
+        example: !include HospitalManagement/Examples/HospitalExampleData.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples:
+              message: The Hospital ID 1 has been successfully created
+
+  /all:
+    get:
+      description: Retrieve all of the hospital details
+      is: errorTraits
+      responses:
+        200:
+          body:
+            application/json:
+              type: hospitalDataType[]
+              examples: !include HospitalManagement/Examples/AllHospitalExampleData.raml
+
+  /{hospitalID}:
+    uriParameters:
+      hospitalID:
+        type: integer
+    get:
+      description: Retrieve the Hospital By given ID
+      is: errorTraits
+      responses:
+        200:
+          body:
+            application/json:
+              type: hospitalDataType
+              examples: !include HospitalManagement/Examples/SingleHospitalExampleData.raml
+        404:
+          body:
+            application/json:
+              examples: {message: "Hospital Not Found"}
+
+    patch:
+      description: Update the Hospital details for the particular hospital
+      is: errorTraits
+      body:
+        application/json:
+          type: hospitalUpdateDataType
+          example: !include HospitalManagement/Examples/HospitalUpdateExampleData.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: Hospital has been updated successfully
+
+/organ-request:
+  post:
+    description: Add new Organ Request
+    is: errorTraits
+    body:
+      application/json:
+        type: receiverRequestDataType
+        example: !include ReceiverRequestManagement/Examples/ReceiverRequestExampleData.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples:
+              message: The Organ Request ID 1 has been successfully created
+
+  /all:
+    get:
+      description: Retrieve all of the Organ Requests
+      is: errorTraits
+      queryParameters: 
+        blood_group:
+          description: Blood Group of the User
+          enum: ["O+","A+","AB+","B+","O-","AB-","A-","B-"]
+          required: false
+        organ_name:
+          description: Organ Name
+          type: string
+          required: false
+        status:
+          description: Status
+          enum: ["open", "close","archieve"]
+          required: false
+        state:
+          description: State
+          type: string
+          required: false
+        transplant_priority:
+          description: Criticality of the Receiver
+          enum: ["critical","high","medium","low"]
+          required: false
+        survival_time:
+          description: Survival Time of the Receiver
+          type: string
+          required: false
+        transformation_required:
+          description: Transformaion of the Receiver
+          type: boolean
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              type: receiverGetRequestDataType[]
+              examples: !include ReceiverRequestManagement/Examples/AllReceiverRequestsExampleData.raml
+
+  /{requestID}:
+    uriParameters:
+      requestID:
+        type: integer
+    get:
+      description: Retrieve the Organ Request By given ID
+      is: errorTraits
+      responses:
+        200:
+          body:
+            application/json:
+              type: receiverGetRequestDataType
+              examples: !include ReceiverRequestManagement/Examples/SingleReceiverRequestExampleData.raml
+        404:
+          body:
+            application/json:
+              examples: {message: "Organ Request Not Found"}
+
+    patch:
+      description: Update the Organ Request details for the particular request
+      is: errorTraits
+      body:
+        application/json:
+          type: receiverUpdateRequestDataType
+          example: !include ReceiverRequestManagement/Examples/ReceiverUpdateRequestExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: Organ Request has been updated successfully
+
+/donate-request:
+  post:
+    description: Add new Organ Donate Request
+    is: errorTraits
+    body:
+      application/json:
+        type: donateRequestDataType
+        example: !include DonateRequestManagement/Examples/DonateRequestExampleData.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples:
+              message: The Organ Donate Request ID 1 has been successfully created
+
+  /all:
+    get:
+      description: Retrieve all of the Donate Requests
+      is: errorTraits
+      queryParameters: 
+        blood_group:
+          description: Blood Group of the User
+          enum: ["O+","A+","AB+","B+","O-","AB-","A-","B-"]
+          required: false
+        organ_name:
+          description: Organ Name
+          type: string
+          required: false
+        status:
+          description: Status
+          enum: ["open", "close","archieve"]
+          required: false
+        state:
+          description: State
+          type: string
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              type: donateGetRequestDataType[]
+              examples: !include DonateRequestManagement/Examples/AllDonateRequestsExampleData.raml
+
+  /{requestID}:
+    uriParameters:
+      requestID:
+        type: integer
+    get:
+      description: Retrieve the Donate Request By given ID
+      is: errorTraits
+      responses:
+        200:
+          body:
+            application/json:
+              type: donateGetRequestDataType
+              examples: !include DonateRequestManagement/Examples/SingleDonateRequestExampleData.raml
+        404:
+          body:
+            application/json:
+              examples: {message: "Donate Request Not Found"}
+
+    patch:
+      description: Update the Donate Request details for the particular request
+      is: errorTraits
+      body:
+        application/json:
+          type: donateUpdateRequestDataType
+          example: !include DonateRequestManagement/Examples/DonateUpdateRequestExampleData.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: Receiver Request has been updated successfully
+
+/address:
+  post:
+    description: Add new Address
+    is: errorTraits
+    body:
+      application/json:
+        type: addressDataType
+        example: !include AddressManagement/Examples/AddressExampleData.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples: {address_id: 1}
+
+  /{addressID}:
+    uriParameters:
+      addressID:
+        type: integer
+    patch:
+      description: Update the Address Information
+      is: errorTraits
+      body:
+        application/json:
+          type: addressUpdateDataType
+          example: !include AddressManagement/Examples/AddressUpdateExampleData.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: Address has been updated successfully

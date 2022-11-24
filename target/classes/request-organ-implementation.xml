@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:jira="http://www.mulesoft.org/schema/mule/jira" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jira http://www.mulesoft.org/schema/mule/jira/current/mule-jira.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="request_organ_implementationSub_Flow" doc:id="d26d448b-3db4-4030-bc85-84c3fd4f4379" >
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="6ed2144f-2d79-45bc-9207-3e84e6f08dbc" variableName="reqstOrgPayload"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7fb654b3-7a8a-4ce6-8c5c-865c2b954f38" message="checking===================&gt; #[vars.reqstOrgPayload.organ_name]"/>
+		<db:query-single doc:name="Query single" doc:id="23f02379-64e9-4330-8a2f-54f8b19e591a" config-ref="Database_Config" target="selectedData">
+			<db:sql ><![CDATA[SELECT * from receiver_requests where user_id =:user_id AND organ_name =:organ_name]]></db:sql>
+			<db:parameter-types />
+			<db:input-parameters ><![CDATA[#[{
+	user_id: vars.reqstOrgPayload.user_id,
+	organ_name: vars.reqstOrgPayload.organ_name
+}]]]></db:input-parameters>
+		</db:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="eb47eb4c-304f-458c-96b6-955c2fa54e43" message="get organ request data ===&gt; #[vars.selectedData]"/>
+		<choice doc:name="Choice" doc:id="f9842bcb-9e0a-4480-a316-b90443492388" >
+			<when expression="#[isEmpty(vars.selectedData)]">
+				<ee:transform doc:name="Transform Message" doc:id="71967c3c-f067-4f16-beb0-a6d45c6ec4c2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "fields": {
+    "project": {
+      "key": "OP"
+    },
+    "summary": "Organ request for for patient ID " ++ vars.reqstOrgPayload.request_id ++ "and Patient Details are, Hospital ID :" ++ vars.reqstOrgPayload.hospital_id as String ++ 
+                     ", Emergency Contact Number : " ++ vars.reqstOrgPayload.emergency_contact_number as Number ++ 
+                     ", Emergency Contact Address : " ++ vars.reqstOrgPayload.emergency_contact_address ++
+                     ", Organ Required for : " ++ vars.reqstOrgPayload.organ_name ++
+                     ", and the critaclity is : " ++ vars.reqstOrgPayload.transplant_priority,
+    "issuetype":
+     {
+      "name": "Task",
+      "description":"task"
+     } 
+  } 
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<jira:create-rest-api3-issue doc:name="create_organ_request_jira_task" doc:id="9897fed4-8515-4a09-8c0a-437f466828d2" config-ref="Jira_Connector_Config">
+		</jira:create-rest-api3-issue>
+				<set-variable value="#[payload.id]" doc:name="Set Variable" doc:id="ea3a7160-ce1f-41d7-a55b-c674111ef132" variableName="jirataskId" />
+				<db:insert doc:name="Insert" doc:id="c55984f7-e8a5-4a0f-91c6-3660ca88133e" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO receiver_requests(request_id,user_id,hospital_id,organ_name,transplant_priority,survival_time,medical_report,transformation_required,emergency_contact_address,created_at,updated_at,emergency_contact_number,status,jira_task_id) 
+VALUES (:request_id,:user_id,:hospital_id,:organ_name,:transplant_priority,:survival_time,:medical_report,:transformation_required,:emergency_contact_address,:created_at,:updated_at,:emergency_contact_number,:status,:jira_task_id)]]></db:sql>
+			<db:parameter-types>
+				<db:parameter-type key="transplant_priority" type="OTHER" />
+				<db:parameter-type key="status" type="OTHER" />
+			</db:parameter-types>
+			<db:input-parameters><![CDATA[#[{
+	request_id: vars.reqstOrgPayload.request_id,
+	user_id: vars.reqstOrgPayload.user_id,
+	hospital_id: vars.reqstOrgPayload.hospital_id,
+        organ_name: vars.reqstOrgPayload.organ_name,
+        transplant_priority: vars.reqstOrgPayload.transplant_priority,
+        survival_time: vars.reqstOrgPayload.survival_time,
+        medical_report: vars.reqstOrgPayload.medical_report,
+        transformation_required: vars.reqstOrgPayload.transformation_required,
+        emergency_contact_address: vars.reqstOrgPayload.emergency_contact_address,
+        created_at : now() as Date {format:'yyyy-mm-dd'},
+        updated_at : now() as Date {format:'yyyy-mm-dd'},
+        emergency_contact_number: vars.reqstOrgPayload.emergency_contact_number,
+        status: vars.reqstOrgPayload.status,
+        jira_task_id :vars.jirataskId
+}]]]></db:input-parameters>
+		</db:insert>
+				<logger level="INFO" doc:name="Logger" doc:id="7d462602-dafe-4ef2-8057-c8e8cf7a27ee" message='#["Insert Success"]' />
+				<ee:transform doc:name="Transform Message" doc:id="cf31cf03-21e1-4969-8da0-96a9f522842e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Receiver Request has been added successfully with request ID " ++ vars.reqstOrgPayload.request_id as String
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="83665525-323e-4d31-ba53-16b2248897f0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:'Your request for '++ vars.selectedData.organ_name ++ ' already exist'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="patch-organ-request-subflow" doc:id="e3d7c594-0893-455f-b07e-7be6f099e59c" >
+		<set-variable value="#[attributes.uriParams.requestID]" doc:name="request_id" doc:id="a107552b-eaf2-4b64-9744-dd4e1d5da2fa" variableName="request_id"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9182d730-c5cd-44fe-9f04-e1c6cf93813f" message="uri params id==========&gt;#[vars.request_id]"/>
+		<db:query-single doc:name="Query single" doc:id="638525bf-9a05-4172-8859-be1eb0757617" config-ref="Database_Config" target="selectedData">
+			<db:sql ><![CDATA[SELECT * from receiver_requests where request_id =: request_id AND status =: status]]></db:sql>
+			<db:parameter-types >
+			</db:parameter-types>
+			<db:input-parameters ><![CDATA[#[{
+	request_id: vars.request_id,
+	status: "open"
+}]]]></db:input-parameters>
+		</db:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="23888dea-2317-4a17-859a-92579649713e" message="all get data #[vars.selectedData]"/>
+		<set-variable value="#[vars.selectedData.jira_task_id]" doc:name="Set Variable" doc:id="8112ee0b-5834-45fc-8919-3c59695ad218" variableName="jirataskId"/>
+		<choice doc:name="Choice" doc:id="b596bca0-369f-4298-9c9e-eec9005518d9" >
+			<when expression="#[!isEmpty(vars.selectedData)]" >
+				<ee:transform doc:name="Transform Message" doc:id="375bc642-835a-4602-832b-6618d0c0175e" >
+					<ee:message />
+					<ee:variables >
+						<ee:set-variable variableName="updateRequestQuery" ><![CDATA[%dw 2.0
+output application/json
+fun queryFields(item) = (item mapObject ((value, key, index) -> (key) : if(typeOf(value) == Number) value else "'" ++ value ++ "'" ) pluck ((value, key, index) -> [(key) , value ] joinBy(" = "))) joinBy(", ")
+---
+"UPDATE receiver_requests SET " ++ queryFields(payload) ++ " WHERE request_id = " ++ vars.request_id]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="162960f6-2319-446e-936c-e0ccd06792dc" message="#[vars.updateRequestQuery]" />
+				<db:update doc:name="Update" doc:id="9ab0aaf3-10d2-4689-b633-cff4f6bfbe5d" config-ref="Database_Config">
+					<db:sql ><![CDATA[#[vars.updateRequestQuery]]]></db:sql>
+				</db:update>
+				<db:query-single doc:name="Query single" doc:id="edab5394-0a8d-4dfc-a705-225d1b857222" config-ref="Database_Config">
+					<db:sql ><![CDATA[SELECT * from receiver_requests where request_id =: request_id AND status =: status]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	request_id: vars.request_id,
+	status: "open"
+}]]]></db:input-parameters>
+				</db:query-single>
+				<ee:transform doc:name="Transform Message" doc:id="7e258c81-b03f-4963-b400-14f3bce329b1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "fields": {
+    "project": {
+      "key": "OP"
+    },
+    "summary": "Organ request for for patient ID " ++ payload.request_id ++ "and Patient Details are, Hospital ID :" ++ payload.hospital_id as String ++ 
+                     ", Emergency Contact Number : " ++ payload.emergency_contact_number as Number ++ 
+                     ", Emergency Contact Address : " ++ payload.emergency_contact_address ++
+                     ", Organ Required for : " ++ payload.organ_name ++
+                     ", and the critaclity is : " ++ payload.transplant_priority,
+    "issuetype":
+     {
+      "name": "Task",
+      "description":"task"
+     } 
+  } 
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<jira:update-rest-api3-issue-by-issue-id-or-key doc:name="Edit Issue" doc:id="3f2539b3-5e48-4edb-bbfb-5a0fe7198271" config-ref="Jira_Connector_Config" issueIdOrKey="#[vars.selectedData.jira_task_id]"/>
+				<logger level="INFO" doc:name="Logger" doc:id="ef45d8fd-7077-4183-a092-5b1b6c398fc5" message="jira tak id ----&gt;#[vars.selectedData.jira_task_id]"/>
+				<ee:transform doc:name="Transform Message" doc:id="62a109fa-ae9c-43be-8b2f-3781aeae8dcc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "The Organ request ID" ++ vars.request_id as String ++ " has been updated successfully"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="0ae984b1-b64d-4efa-b0c2-fa7d491d87b0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:'Organ Request Not Found'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="getAllOrganRequest" doc:id="89ed3fd1-0039-4817-898b-aeb11674ce28" >
+		<db:select doc:name="Select" doc:id="cf20bf94-aa3b-4bfc-80e4-b443ed6217ec" config-ref="Database_Config" target="selectedData">
+			<db:sql ><![CDATA[SELECT * from receiver_requests WHERE status =: status]]></db:sql>
+			<db:parameter-types >
+			</db:parameter-types>
+			<db:input-parameters ><![CDATA[#[{
+	status: "open"
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="b401a780-6a81-4d86-bdc7-e8f6a62fe925" >
+			<when expression="!isEmpty(vars.selectedData)">
+				<ee:transform doc:name="Transform Message" doc:id="3f484428-e0a4-4ec8-bda9-f7e759d0796b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.selectedData]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="83af24cf-fe9f-492d-a442-177f716acb6e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:'Organ Request Not Found'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="get-request-organ-by-id" doc:id="887342bc-a1ed-446b-94ef-2ba40edbe1ae" >
+		<set-variable value="#[attributes.uriParams.requestID]" doc:name="Set Variable" doc:id="3d0bc321-9f93-47c4-866a-ef3f961e4cff" variableName="request_id"/>
+		<logger level="INFO" doc:name="Logger" doc:id="102e79d2-8cf4-418b-bed5-f8a452a2fc7b" message="#[vars.request_id]"/>
+		<db:query-single doc:name="Query single" doc:id="f2975dd0-27b6-4731-9e04-c207f3c8c4f4" config-ref="Database_Config" target="selectedData">
+			<db:sql ><![CDATA[SELECT * from receiver_requests where request_id = :request_id AND status = :status]]></db:sql>
+			<db:parameter-types >
+				<db:parameter-type key="status" type="OTHER" />
+			</db:parameter-types>
+			<db:input-parameters ><![CDATA[#[{
+	request_id: vars.request_id,
+	status: "open"
+}]]]></db:input-parameters>
+		</db:query-single>
+		<logger level="INFO" doc:name="Logger" doc:id="1450b6ba-b911-4bb8-bb46-a584ded80ca2" message="#[vars.selectedData]"/>
+		<choice doc:name="Choice" doc:id="bda423c2-02d1-4dea-932c-c04431b4627b" >
+			<when expression="#[!isEmpty(vars.selectedData)]">
+				<ee:transform doc:name="Transform Message" doc:id="1eeb1865-9623-4e57-a202-553d8645128c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.selectedData]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="bcfa9597-a3f5-4132-9409-dc6492ed5015" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[output application/json
+---
+{
+	message:'Organ Request Not Found'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

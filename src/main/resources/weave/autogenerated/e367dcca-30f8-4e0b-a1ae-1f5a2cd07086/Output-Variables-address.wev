@@ -1,0 +1,8 @@
+%dw 2.0
+
+type auto_e367dcca_30f8_4e0b_a1ae_1f5a2cd07086_Output_Variables_address = {|
+  affectedRows?: Number, 
+  generatedKeys?: { _?: Number }
+|} {"typeAlias": "StatementResult",
+"typeId": "org.mule.extension.db.api.StatementResult"}
+

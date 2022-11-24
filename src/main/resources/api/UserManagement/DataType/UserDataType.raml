@@ -1,0 +1,55 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  user_id?: integer
+  first_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  last_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  email: 
+    type: string
+    pattern: ^.+@.+\..+$
+    minLength: 5
+    maxLength: 50
+  phone:
+    type: number       
+  date_of_birth: date-only
+  age: integer
+  gender:
+   enum: ["male", "female", "other"]
+  user_type:
+    enum: ["receiver", "donor"]
+  blood_group:
+    enum: ["O+","A+","AB+","B+","O-","AB-","A-","B-"]
+  landmark?:
+    type: string
+    minLength: 5
+    maxLength: 25
+  address_line_1:
+    type: string
+    minLength: 5
+    maxLength: 30
+  address_line_2?:
+    type: string
+    minLength: 5
+    maxLength: 30
+  district?: string
+  place:
+    type: string
+    minLength: 3
+    maxLength: 15
+  state:
+    type: string
+    minLength: 3
+    maxLength: 15
+  pincode:
+    type: number
+  identity_card:
+    enum: ["aadhar_card","pan_card","voter_card"] 
+  identity_card_number: string
+    

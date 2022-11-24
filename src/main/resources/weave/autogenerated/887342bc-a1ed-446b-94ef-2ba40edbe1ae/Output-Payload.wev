@@ -1,0 +1,19 @@
+%dw 2.0
+
+type auto_887342bc_a1ed_446b_94ef_2ba40edbe1ae_Output_Payload = {|
+  created_at?: Date, 
+  hospital_id?: Number, 
+  updated_at?: Date, 
+  organ_name?: String, 
+  emergency_contact_address?: String, 
+  user_id?: Number, 
+  survival_time?: String, 
+  medical_report?: String, 
+  status?: String, 
+  request_id?: Number, 
+  transformation_required?: Boolean, 
+  emergency_contact_number?: Number, 
+  message?: String, 
+  transplant_priority?: String
+|}
+

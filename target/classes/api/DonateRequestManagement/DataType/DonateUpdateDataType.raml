@@ -1,0 +1,15 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  current_landmark?: string
+  current_address_line_1?: string
+  current_address_line_2?: string
+  current_district?: string
+  current_place?: string
+  current_state?: string
+  current_postal_code?: number
+  alternate_contact_number?: number
+  status?: 
+    enum: ["open", "close","archieve"]
+    

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="insertAddress" doc:id="864d0a02-ee98-4c2b-89fe-bcd2c8311d2f">
+		<db:insert doc:name="Insert Address" doc:id="53d534d3-4d66-45f5-975c-780be5ab3cd1" config-ref="Database_Config" autoGenerateKeys="true" target="address">
+			<db:sql><![CDATA[INSERT INTO address (landmark, address_line_1, address_line_2, place, district, state, pincode, created_at, updated_at)
+VALUES (:landmark, :address_line_1, :address_line_2, :place, :district, :state, :pincode, now(), now())]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+  "landmark": payload.landmark default null,
+  "address_line_1": payload.address_line_1,
+  "address_line_2": payload.address_line_2 default null,
+  "district": payload.district default null,
+  "place": payload.place,
+  "state": payload.state,
+  "pincode": payload.pincode
+}]]]></db:input-parameters>
+		</db:insert>
+		<set-variable value="#[vars.address.generatedKeys.address_id]" doc:name="address_id" doc:id="a7ef3c92-9581-4fcb-8686-05bb29cb93dc" variableName="address_id"/>
+		<ee:transform doc:name="Transform Message" doc:id="f07180e4-eddf-42e9-b01a-c7fcccf0ac8f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"address_id": vars.address_id
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="updateAddress" doc:id="9dad5687-858b-49c4-acf7-d710a85dba25">
+		<db:select doc:name="Select Address By ID" doc:id="3595deae-f2ec-4635-823c-c4d413c8bd10" config-ref="Database_Config" target="address_data">
+			<db:sql><![CDATA[SELECT * FROM address WHERE address_id = :address_id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	address_id: attributes.uriParams.addressID
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="db3fc653-a8c4-40f5-9b38-5266f3aa7158">
+			<when expression="#[!isEmpty(vars.address_data)]">
+				<ee:transform doc:name="Update Query" doc:id="855e8570-0503-48e8-a676-5a78836d52f0">
+					<ee:message />
+					<ee:variables>
+						<ee:set-variable variableName="update_query"><![CDATA[%dw 2.0
+output application/json
+fun queryFields(item) = (item mapObject ((value, key, index) -> (key) : if(typeOf(value) == Number) value else "'" ++ value ++ "'" ) pluck ((value, key, index) -> [(key) , value ] joinBy(" = "))) joinBy(", ")
+---
+"UPDATE address SET " ++ queryFields(payload) ++ " WHERE address_id = " ++ attributes.uriParams.addressID]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logged Update Query" doc:id="538daa99-85d3-4ef1-9655-6e333f3d406e" message="#[vars.update_query]" />
+				<db:update doc:name="Update Address" doc:id="d6ffac52-013f-45a5-8899-3916998941ff" config-ref="Database_Config">
+					<db:sql><![CDATA[#[vars.update_query]]]></db:sql>
+				</db:update>
+				<ee:transform doc:name="Address Updated" doc:id="02aba035-6581-43b3-a836-fd8796a06d94">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Address has been updated successfully"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Address Not Found" doc:id="dab293cf-e3b2-4972-bc70-1557fb7aeb27">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Address has not been found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	
+	</mule>

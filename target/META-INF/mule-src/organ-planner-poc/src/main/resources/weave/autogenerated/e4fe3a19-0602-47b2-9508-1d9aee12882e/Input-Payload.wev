@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_e4fe3a19_0602_47b2_9508_1d9aee12882e_Input_Payload = Array<{  emergency_contact_number?: Number,   medical_report?: String,   emergency_contact_address?: String,   last_name: String,   identity_card: String,   hospital_registration_number: String,   organ_name: String,   phone: Number,   district?: String,   address_line_1: String,   blood_group: "B+" | "A+" | "AB+" | "B-" | "O+" | "AB-" | "A-" | "O-",   address_line_2?: String,   place: String,   state: String,   request_id?: Number,   first_name: String,   survival_time: String,   email: String,   transplant_priority: "high" | "critical" | "low" | "medium",   transformation_required: Boolean,   identity_card_number: String,   hospital_name: String,   status: "archieve" | "close" | "open",   _?: Any}>
+
