@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_d9cc1982_6c06_4265_a05d_a1fa2e5651f6_Output_Variables_user_data = Array<{|  user_id: Number,   first_name: String,   last_name: String,   email: String,   date_of_birth: String,   gender?: String,   blood_group?: String,   identity_card?: String,   user_type?: String,   identity_number: String,   address_id: Number,   created_at?: Date,   updated_at?: Date,   phone?: Number,   age?: Number|}>
+

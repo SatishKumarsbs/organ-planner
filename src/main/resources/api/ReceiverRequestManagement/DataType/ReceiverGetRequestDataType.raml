@@ -1,0 +1,56 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  request_id?: integer
+  first_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  last_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  email: 
+    type: string
+    pattern: ^.+@.+\..+$
+    minLength: 3
+    maxLength: 50
+  phone: number
+  blood_group:
+    enum: ["O+","A+","AB+","B+","O-","AB-","A-","B-"]
+  address_line_1:
+    type: string
+    minLength: 5
+    maxLength: 30
+  address_line_2?:
+    type: string
+    minLength: 5
+    maxLength: 30
+  district?: string
+  place:
+    type: string
+    minLength: 3
+    maxLength: 15
+  state:
+    type: string
+    minLength: 3
+    maxLength: 15
+  identity_card: string
+  identity_card_number: string
+  hospital_name:
+    type: string
+    minLength: 3
+    maxLength: 25
+  hospital_registration_number: string
+  emergency_contact_number?: number
+  emergency_contact_address?: string
+  organ_name: string
+  transplant_priority:
+    enum: ["critical","high","medium","low"]
+  survival_time: string
+  medical_report?: string
+  transformation_required: boolean
+  status: 
+    enum: ["open", "close","archieve"]
+    

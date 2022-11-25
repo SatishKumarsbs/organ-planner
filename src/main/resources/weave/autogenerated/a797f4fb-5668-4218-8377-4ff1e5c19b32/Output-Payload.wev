@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_a797f4fb_5668_4218_8377_4ff1e5c19b32_Output_Payload = Array<{|  first_name: String,   last_name: String,   email: String,   phone?: Number,   date_of_birth: String,   gender?: String,   blood_group?: String,   identity_card?: String,   user_type?: String,   identity_number: String,   landmark?: String,   address_line_1: String,   district?: String,   place: String,   state: String,   pincode: Number|}>
+

@@ -1,0 +1,8 @@
+%dw 2.0
+
+type auto_ee48e501_b8ad_482a_88bb_6cf1ed1e0c0f_Output_Variables_organRequest = {|
+  affectedRows?: Number, 
+  generatedKeys?: { _?: Number }
+|} {"typeAlias": "StatementResult",
+"typeId": "org.mule.extension.db.api.StatementResult"}
+

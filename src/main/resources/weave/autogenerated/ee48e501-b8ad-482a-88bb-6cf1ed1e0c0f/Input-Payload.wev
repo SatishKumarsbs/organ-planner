@@ -1,0 +1,17 @@
+%dw 2.0
+
+type auto_ee48e501_b8ad_482a_88bb_6cf1ed1e0c0f_Input_Payload = {
+  emergency_contact_number?: Number, 
+  medical_report?: String, 
+  organ_name: String, 
+  user_id: Number, 
+  emergency_contact_address?: String, 
+  hospital_id: Number, 
+  request_id?: Number, 
+  survival_time: String, 
+  transplant_priority: "high" | "critical" | "low" | "medium", 
+  transformation_required: Boolean, 
+  status: "archieve" | "close" | "open", 
+  _?: Any
+}
+

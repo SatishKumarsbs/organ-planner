@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="insertOrganRequest" doc:id="ee48e501-b8ad-482a-88bb-6cf1ed1e0c0f" >
+		<choice doc:name="Choice" doc:id="81b1ea1b-59a7-4e82-8251-7dc2bbdf30b9" >
+			<when expression="#[sizeOf(payload)&lt;1]" >
+				<db:insert doc:name="Insert Into Receivers Request" doc:id="dc1c1019-42c3-4d07-9eef-3ed37cd3b932" config-ref="Database_Config" autoGenerateKeys="true" target="organRequest" >
+					<db:sql ><![CDATA[INSERT INTO receiver_requests (user_id, hospital_id, organ_name, transplant_priority, survival_time, medical_report, transformation_required, emergency_contact_address, emergency_contact_number, created_at, updated_at) 
+VALUES (:user_id, :hospital_id, :organ_name, :transplant_priority, :survival_time, :medical_report, :transformation_required, :emergency_contact_address, :emergency_contact_number, now(), now())]]></db:sql>
+					<db:parameter-types >
+						<db:parameter-type key="transplant_priority" type="OTHER" />
+						<db:parameter-type key="blood_group" type="OTHER" />
+					</db:parameter-types>
+					<db:input-parameters ><![CDATA[#[{
+	user_id: payload.user_id,
+	hospital_id: payload.hospital_id,
+	organ_name: payload.organ_name,
+	transplant_priority: payload.transplant_priority,
+	survival_time: payload.survival_time,
+	medical_report: payload.medical_report,
+	transformation_required: payload.transformation_required,
+	emergency_contact_address: payload.emergency_contact_address,
+	emergency_contact_number: payload.emergency_contact_number,
+}]]]></db:input-parameters>
+				</db:insert>
+				<set-variable value="#[vars.organRequest.generatedKeys.request_id]" doc:name="request_id" doc:id="846f982f-b921-4658-a098-624719a4b6b2" variableName="request_id" />
+				<logger level="INFO" doc:name="request_id" doc:id="84a1e66b-1827-4a80-a1cf-fe9f15e091f9" message="#[vars.request_id]" />
+				<ee:transform doc:name="Organ Request Inserted Successfully" doc:id="19be8087-0517-487a-ad21-5a81b386644d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "The Request ID " ++ vars.request_id as String ++ " has been successfully created"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Empty Payload" doc:id="329efe88-cebd-44f8-9c2f-d06f473b9cea" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Payload is Empty"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>
